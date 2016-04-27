@@ -19,9 +19,16 @@
 
 (define db-conn
   (virtual-connection
-   (thunk (sqlite3-connect #:database (build-path (find-system-path 'home-dir)
-                                                  (format "rpaste~a.sqlite3" schema-version))
+   (thunk (sqlite3-connect #:database (build-path
+                                       (find-system-path 'home-dir)
+                                       (format "rpaste~a.sqlite3" schema-version))
                            #:mode 'create))))
+
+(define-syntax-rule (send-output a ...)
+  (λ (op)
+    (parameterize ([current-output-port op])
+      a ...)
+    (void)))
 
 (define site-title "Pastes hosted by rpaste")
 
@@ -34,40 +41,14 @@ CREATE TABLE IF NOT EXISTS Pastes
 END
             )
 
-(define style #<<END
-body {
-  font-family: mono;
-}
-
-END
-  )
-(define form-style #<<END
-html, body, #container, form {
-  height: 100%;
-  margin: 0;
-}
-
-form {
-  display: flex;
-  flex-direction: column;
-}
-
-#container textarea {
-  flex-grow: 1;
-}
-
-#container button {
-  width: 100%;
-}
-END
-  )
-
 (define (start req)
   (match (request-method req)
     [#"HEAD" (make-head (start (struct-copy request req [method #"GET"])))]
     [#"GET" (route-get req)]
     [#"POST" (make-paste req)]
-    [m (mk-bad (format "Method ~a not allowed." m) #:code 405 #:message #"Method Not Allowed")]))
+    [m (mk-bad (format "Method ~a not allowed." m)
+               #:code 405
+               #:message #"Method Not Allowed")]))
 
 (define (route-get req)
   (match (map path/param-path (url-path (request-uri req)))
@@ -86,14 +67,12 @@ END
                                                            #:code 404
                                                            #:message #"Not Found")))])
     (define pth (apply build-path (map path/param-path (url-path (request-uri req)))))
-    (displayln pth)
     (define ip (open-input-file pth))
-    (set! res (mk-gud (curry copy-port ip) #:mime #"text/css"))
-    (displayln res))
+    (set! res (mk-gud (curry copy-port ip) #:mime #"text/css")))
   res)
 
 (define (make-head res)
-  (struct-copy response res [output (λ (op) (void))]))
+  (struct-copy response res [output void]))
 
 (define (mk-bad txt #:code [code 404] #:message [msg #"Not found"] #:mime [mime #"text/plain"])
   (response/output (λ (op)
@@ -141,7 +120,7 @@ END
                               (car p))])
         (if (null? rows)
             (mk-bad (format "No paste with key [~a] :(" (car p)))
-            (mk-gud (λ (op) (write-bytes (vector-ref (car rows) 0) op) (void)))))))
+            (mk-gud (send-output (write-bytes (vector-ref (car rows) 0))))))))
 
 (define (make-paste req)
   (define raw (request-bindings/raw req))
@@ -154,8 +133,8 @@ END
                     hash data (current-seconds))
         (if (and raw (bindings-assq #"redirect" raw))
             (redirect-to (format "/~a" hash))
-        (mk-gud (λ (op) (write-string (string-append hash "\n") op) (void)))))
-      (response/output (λ (op) (write-string "Bad request. Need payload p=...") (void))
+        (mk-gud (send-output (write-string (string-append hash "\n"))))))
+      (response/output (send-output (write-string "Bad request. Need payload p=..."))
                        #:code 400
                        #:message #"Bad request")))
 
