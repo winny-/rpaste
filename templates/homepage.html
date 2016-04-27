@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<head>
+  <title>@|site-title|</title>
+  <link href='/static/base.css' rel='stylesheet'>
+</head>
+<body>
+  <h1>@|site-title|</h1>
+  <p>To paste, run `curl -F p=\&lt;- @site-address &lt; your-file.txt` <br>
+    or visit <a href='/form'>this form</a>.
+  </p>
+  <h2>Pastes</h2>
+  @(if (null? rows)
+  "(No pastes in db!)"
+  @list*{<ul>
+    @in[r rows]{
+    <li><a href='@(vector-ref r 0)'>@(vector-ref r 0)</a> &mdash; @(epoch->rfc2822 (vector-ref r 1))</li>
+    }
+    </ul>
+  }
+  )
+</body>
+

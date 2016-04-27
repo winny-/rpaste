@@ -1,0 +1,17 @@
+html, body, #container, form {
+  height: 100%;
+  margin: 0;
+}
+
+form {
+  display: flex;
+  flex-direction: column;
+}
+
+#container textarea {
+  flex-grow: 1;
+}
+
+#container button {
+  width: 100%;
+}
