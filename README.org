@@ -1,0 +1,7 @@
+* Simple pastebin written in Racket
+
+  Run:
+
+  #+BEGIN_EXAMPLE
+  docker-compose up
+  #+END_EXAMPLE
