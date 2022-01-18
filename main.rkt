@@ -8,6 +8,8 @@
          racket/list
          racket/match
          racket/port
+         racket/logging
+         racket/format
          db
          openssl/sha1
          net/url
@@ -19,6 +21,8 @@
 (define schema-version 2)
 (define db-conn (make-parameter #f))
 
+(define-logger rpaste)
+
 (define-syntax-rule (send-output a ...)
   (λ (op)
     (parameterize ([current-output-port op])
@@ -28,6 +32,7 @@
 (define site-title "Pastes hosted by rpaste")
 
 (define (start req)
+  (log-rpaste-info "~a ~a" (request-method req) (request-uri req))
   (match (request-method req)
     [#"HEAD" (make-head (start (struct-copy request req [method #"GET"])))]
     [#"GET" (route-get req)]
@@ -124,19 +129,22 @@
                        #:code 400
                        #:message #"Bad request")))
 
-(module+ main
+(define (fun)
   (define listen-port (make-parameter 8080))
   (define listen-ip (make-parameter #f))
   (define database (make-parameter (format "./rpaste~a.sqlite3" schema-version)))
-  (void
-   (command-line
-     #:once-each
-     [("-p" "--port") port-string "Port to listen on"
-                      (listen-port (string->number port-string))]
-     [("--ip") ip-string "IP to listen on"
-               (listen-ip ip-string)]
-     [("-d" "--database") database-string "Database to use"
-                          (database database-string)]))
+  (command-line
+   #:once-each
+   [("-p" "--port") port-string "Port to listen on"
+                    (listen-port (string->number port-string))]
+   [("--ip") ip-string "IP to listen on"
+             (listen-ip ip-string)]
+   [("-d" "--database") database-string "Database to use"
+                        (database database-string)])
+  (log-rpaste-debug "(listen-port) = ~a, (listen-ip) = ~a, (database) = ~a"
+                    (listen-port)
+                    (listen-ip)
+                    (database))
   (db-conn
    (virtual-connection
     (thunk (sqlite3-connect #:database (string->path (database))
@@ -157,3 +165,8 @@ END
                  #:servlet-regexp #rx""
                  #:command-line? #t
                  #:server-root-path "."))
+
+(module+ main
+  (with-logging-to-port (current-error-port)
+    fun
+    #:logger rpaste-logger 'debug))

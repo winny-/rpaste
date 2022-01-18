@@ -2,8 +2,13 @@ FROM jackfirth/racket:7.0
 
 WORKDIR /app
 
-COPY . /app/
+COPY info.rkt .
+RUN raco pkg install --auto --name rpaste
 
-RUN raco pkg install --auto --link
+COPY . .
 
-CMD ["racket", "-l", "rpaste", "-m", "--", "-p", "8080", "-d", "/db/db.sqlite3"]
+RUN raco setup rpaste
+
+VOLUME /db
+
+ENTRYPOINT /app/entrypoint.sh
