@@ -89,8 +89,8 @@
 (define (list-pastes req)
   (define rows (query-rows (db-conn) "SELECT key, timestamp FROM Pastes ORDER BY timestamp DESC"))
   (define site-address (match (getenv "APP_URL")
-                         [s (string-append s "/")]
-                         [#f (get-requested-host req)]))
+                         [#f (get-requested-host req)]
+                         [s (string-append s "/")]))
   (response/full
    200 #"Okay"
    (current-seconds) TEXT/HTML-MIME-TYPE
