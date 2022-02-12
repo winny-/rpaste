@@ -1,3 +1,186 @@
+:root {
+  --a: #0060c0;
+  --accent: #99e572;
+  --background-active: rgba(0, 0, 0, 0.2);
+  --background-color: #c0c0c0;
+  --background-gradient: linear-gradient(#c0c0c0, #e0e0e0);
+  --background-hover: rgba(0, 0, 0, 0.1);
+  --border: #808080 1px solid;
+  --input: #f0f0f0;
+  --logotype: #404040;
+  --logotype-shadow: #989898;
+  --primary-background: linear-gradient(#eeffdd, #ccddbb);
+  --primary-background-active: linear-gradient(#bade97, #ccddbb 30%);
+  --primary-background-hover: linear-gradient(#dfffbf, #bade97 70%);
+  --new-border: #80c080;
+  --new-shadow: #f0f0f0;
+  --scroll: #b0b0b0;
+  --scroll-bg: #e0e0e0;
+  --text: #000;
+  --text-alt: #800000;
+  --font-size: 18px;
+  --line-height: 1.5;
+  --georgia: Constantia, 'Lucida Bright', 'Lucida Serif', Lucida, 'DejaVu Serif',
+    'Bitstream Vera Serif', 'Liberation Serif', Georgia, serif;
+  --monospace: Consolas, 'Roboto Mono', 'Noto Sans Mono', monospace;
+  --sans: Roboto, 'Helvetica Neue', 'Noto Sans', sans-serif;
+  --serif: Cambria, 'Roboto Slab', 'Noto Serif', serif;
+}
+* {
+  box-sizing: border-box;
+  scrollbar-color: var(--scroll) var(--scroll-bg);
+}
+::-webkit-scrollbar {
+  width: 16px;
+}
+::-webkit-scrollbar-track-piece,
+::-webkit-scrollbar-corner {
+  background: var(--scroll-bg);
+}
+::-webkit-scrollbar-thumb {
+  background: var(--scroll);
+}
 body {
-  font-family: mono;
+  background: var(--background-gradient);
+  font-family: var(--sans);
+  font-size: var(--font-size);
+  margin: 0;
+  min-height: 100vh;
+}
+.primary {
+  background: var(--primary-background);
+}
+.primary:hover,
+.primary:focus {
+  background: var(--primary-background-hover);
+}
+.primary:active {
+  background: var(--primary-background-active);
+}
+a {
+  color: var(--a);
+  font-weight: bold;
+  text-decoration: none;
+}
+a:focus,
+a:hover,
+button:focus,
+button:hover,
+.button:focus,
+.button:hover {
+  background: var(--background-hover);
+}
+a:active,
+button:active,
+.button:active {
+  background: var(--background-active);
+}
+
+/******************************
+homepage.html
+*******************************/
+main {
+  margin: 0 auto;
+  padding: 0 1rem 1rem;
+  max-width: 45rem;
+  position: relative;
+}
+
+header {
+  margin: 0 0 2rem;
+}
+
+.logotype {
+  color: var(--logotype);
+  letter-spacing: -0.1em;
+  font-family: var(--georgia);
+  font-size: 6em;
+  line-height: 1;
+  text-align: center;
+  text-shadow: 0px 0px 0.1em var(--logotype-shadow);
+}
+
+.slogan {
+  color: var(--text-alt);
+  margin: 0;
+  opacity: 0.5;
+  text-align: center;
+}
+
+section {
+  margin: 0 0 2rem;
+  padding: 1em;
+  overflow: hidden;
+  position: relative;
+}
+
+h1,
+h2 {
+  margin: 0;
+  font: bold 1.5rem/1.5 var(--serif);
+}
+
+.block {
+  display: block;
+}
+
+code {
+  background: rgba(255, 255, 255, 0.5);
+  color: var(--text-alt);
+  font-family: var(--monospace);
+}
+
+.new {
+  border-radius: 6px;
+  border: 1px solid;
+  border-color: var(--new-border);
+  color: var(--text);
+  display: block;
+  font-family: var(--sans);
+  font-size: 1.5rem;
+  font-weight: bold;
+  max-width: 45em;
+  padding: 0.75em 0;
+  text-align: center;
+  text-shadow: 1px 1px 1px var(--new-shadow);
+}
+
+.pastes {
+  padding: 0;
+}
+
+.pastes li {
+  border-top: var(--border);
+  list-style: none;
+}
+
+.pastes a {
+  display: inline-block;
+  line-height: 2;
+}
+
+.credits {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  margin: 5em 0 0;
+  justify-content: center;
+}
+
+.credits p {
+  display: flex;
+  margin: 1em;
+}
+
+.credits a {
+  border: 1px solid;
+  color: var(--text);
+  flex: 1;
+  font-weight: normal;
+  padding: 1em;
+}
+
+.credits span {
+  color: var(--a);
+  font-weight: bold;
 }
