@@ -1,17 +1,64 @@
-html, body, #container, form {
-  height: 100%;
-  margin: 0;
+.form {
+  display: flex;
+  overflow: hidden;
+  height: 100vh;
 }
 
 form {
   display: flex;
+  flex-grow: 1;
   flex-direction: column;
 }
 
-#container textarea {
-  flex-grow: 1;
+button,
+.button,
+textarea {
+  color: var(--text);
+  border-width: 0;
+  font-family: var(--monospace);
+  font-size: var(--font-size);
+  line-height: var(--line-height);
 }
 
-#container button {
-  width: 100%;
+textarea {
+  background: var(--input);
+  color: var(--text);
+  padding-left: 16px;
+  resize: none;
+  flex-grow: 1;
+  display: block;
+  clear: both;
+  width: 100vw;
+}
+
+button,
+.button {
+  border-left: var(--border);
+  color: var(--text);
+  cursor: pointer;
+  font-weight: bold;
+  margin: 0;
+  padding: 0.25em 0.5em;
+  text-align: center;
+}
+
+textarea:focus,
+button:focus,
+.button:focus {
+  outline: 0;
+}
+
+textarea:focus {
+  border-left: var(--accent) 8px solid;
+  padding-left: 8px;
+}
+
+.tools {
+  display: flex;
+  justify-content: space-between;
+  border-top: var(--border);
+}
+
+.save {
+  flex-grow: 1;
 }

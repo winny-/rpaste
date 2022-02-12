@@ -1,17 +1,19 @@
 <!DOCTYPE html>
-<head>
-  <title>Make a new paste</title>
-  <link href='static/base.css' rel='stylesheet'>
-  <link href='static/form.css' rel='stylesheet'>
-</head>
-<body>
-  <div id='container'>
-    <form action='/' method='post'>
-      <textarea name='p'></textarea>
-      <div>
-        <button type='submit'>Paste!</button>
-      </div>
-      <input type='hidden' name='redirect'/>
-    </form>
-  </div>
-</body>
+<html lang='en'>
+<meta charset='utf-8' />
+<meta name='viewport' content='width=device-width' />
+<title>new paste</title>
+<link rel="icon" href="./favicon.svg" type="image/svg+xml">
+<link rel='stylesheet' href='static/base.css' type='text/css' />
+<link rel='stylesheet' href='static/form.css' type='text/css' />
+
+<body class='form'>
+	<form action='/' method='post'>
+		<textarea name='p' autofocus></textarea>
+		<div class='tools'>
+			<a class='button' href='/'>&lt; Home</a>
+			<button class='primary save'>
+				Save
+			</button>
+		</div>
+	</form>
