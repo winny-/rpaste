@@ -1,13 +1,13 @@
 .form {
   display: flex;
-  overflow: hidden;
   height: 100vh;
+  overflow: hidden;
 }
 
 form {
   display: flex;
-  flex-grow: 1;
   flex-direction: column;
+  flex-grow: 1;
 }
 
 button,
@@ -23,11 +23,9 @@ textarea {
 textarea {
   background: var(--input);
   color: var(--text);
+  flex-grow: 1;
   padding-left: 16px;
   resize: none;
-  flex-grow: 1;
-  display: block;
-  clear: both;
   width: 100vw;
 }
 
@@ -54,9 +52,9 @@ textarea:focus {
 }
 
 .tools {
+  border-top: var(--border);
   display: flex;
   justify-content: space-between;
-  border-top: var(--border);
 }
 
 .save {
