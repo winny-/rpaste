@@ -149,8 +149,9 @@
                     (database))
   (db-conn
    (virtual-connection
-    (thunk (sqlite3-connect #:database (string->path (database))
-                            #:mode 'create))))
+    (connection-pool
+     (thunk (sqlite3-connect #:database (string->path (database))
+                             #:mode 'create)))))
   (query-exec (db-conn) #<<END
 CREATE TABLE IF NOT EXISTS Pastes
   ("id" INTEGER PRIMARY KEY  AUTOINCREMENT  NOT NULL,
@@ -171,4 +172,4 @@ END
 (module+ main
   (with-logging-to-port (current-error-port)
     fun
-    #:logger rpaste-logger 'debug))
+    #:logger rpaste-logger 'debug 'rpaste))
