@@ -1,45 +1,57 @@
 <!DOCTYPE html>
 <html lang='en'>
-<meta charset='utf-8' />
-<title>@|site-title|</title>
-<link rel="icon" href="./favicon.svg" type="image/svg+xml">
-<link rel='stylesheet' href='static/base.css' type='text/css' />
-<main>
-	<header>
-		<div class='logotype'>@|site-title|</div>
-		<h1 class='slogan'>pastebin host</h1>
-	</header>
-	<a class='new primary' href='./form'>New Paste</a>
+  <head
+    <meta charset='utf-8' />
+    <title>@|site-title|</title>
+    <link rel="icon" href="./favicon.svg" type="image/svg+xml">
+    <link rel='stylesheet' href='static/base.css' type='text/css' />
+  </head>
 
-	<section>
-		<h1>
-			Terminal Access
-		</h1>
-		<p>
-			<code class='block'>
-				curl -F p=\&lt;- https://rpaste-p6svl.ondigitalocean.app/ &lt;
-				your-file.txt
-			</code>
-	</section>
-	<section>
-		<h1>Pastes</h1>
-		<p>
-			@(if (null? rows)
-			"(No pastes in database!)"
-			@list*{
-		<ul class='pastes'>
-			@in[r rows]{
-			<li><a href='@(vector-ref r 0)'>@(vector-ref r 0)</a> &mdash; @(epoch->rfc2822 (vector-ref r 1))</li>
-			}
-		</ul>
-		}
-		)
-	</section>
-	<footer class='credits'>
-		<p>
-			<a href='https://winny.tech/'>Created by <span>Winny</a>
-		<p>
-			<a href='https://vezquex.com/'>Web Design by <span>Vez</a>
-		<p>
-			<a href='https://github.com/winny-/rpaste'>
-				Source Code on <span>GitHub</a>
+  <body>
+    <main>
+      <header>
+        <div class='logotype'>@|site-title|</div>
+        <h1 class='slogan'>pastebin host</h1>
+      </header>
+      <a class='new primary' href='./form'>New Paste</a>
+
+      <section>
+        <h1>
+          Terminal Access
+        </h1>
+        <p>
+          <code class='block'>
+curl -F p=\&lt;- https://rpaste-p6svl.ondigitalocean.app/ &lt; your-file.txt
+          </code>
+      </section>
+      <section>
+        <h1>Pastes</h1>
+        <p>
+          @(if (null? rows)
+            "(No pastes in database!)"
+            @list*{
+              <ul class='pastes'>
+                @in[r rows]{
+                <li>
+                  <a href='@(vector-ref r 0)'>@(vector-ref r 0)</a>
+                  <br/>
+                  <i>@(epoch->rfc2822 (vector-ref r 1))</i>
+                </li>
+              }
+            </ul>})
+      </section>
+      <footer class='credits'>
+        <p>
+          <a href='https://winny.tech/'>Created by <span>Winny</a>
+          </span>
+        </p>
+        <p>
+          <a href='https://vezquex.com/'>Web Design by <span>Vez</span></a>
+        </p>
+        <p>
+          <a href='https://github.com/winny-/rpaste'>
+            Source Code on <span>GitHub</span>
+          </a>
+        </p>
+  </body>
+</html>
