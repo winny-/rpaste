@@ -29,7 +29,7 @@
       a ...)
     (void)))
 
-(define site-title "Pastes hosted by rpaste")
+(define site-title "rpaste")
 
 (define (start req)
   (log-rpaste-info "~a ~a" (request-method req) (request-uri req))
