@@ -5,7 +5,7 @@
     <meta name='viewport' content='width=device-width' />
     <title>new paste</title>
   </head>
-  <link rel="icon" href="./favicon.svg" type="image/svg+xml">
+  <link rel="icon" href="static/favicon.svg" type="image/svg+xml">
   <link rel='stylesheet' href='static/base.css' type='text/css' />
   <link rel='stylesheet' href='static/form.css' type='text/css' />
 
@@ -13,12 +13,13 @@
     <form action='/' method='post'>
       <textarea name='p'
                 autofocus
+                required
                 placeholder='Paste here...'></textarea>
       <div class='tools'>
-        <a class='button' href='/'>&lt; Home</a>
         <button class='primary save'>
           Save
         </button>
+        <a class='button' href='/'>&lt; Home</a>
       </div>
     </form>
   </body>
