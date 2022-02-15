@@ -10,6 +10,7 @@
          racket/port
          racket/logging
          racket/format
+         racket/path
          db
          openssl/sha1
          net/url
@@ -134,7 +135,10 @@
 (define (fun)
   (define listen-port (make-parameter 8080))
   (define listen-ip (make-parameter #f))
-  (define database (make-parameter (format "./rpaste~a.sqlite3" schema-version)))
+  (define (normalize-path-string s)
+    (path->string (simple-form-path (string->path s))))
+  (define database (make-parameter (normalize-path-string (format "./rpaste~a.sqlite3" schema-version))
+                                   normalize-path-string))
   (command-line
    #:once-each
    [("-p" "--port") port-string "Port to listen on"
