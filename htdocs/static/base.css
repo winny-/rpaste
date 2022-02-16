@@ -41,7 +41,7 @@
     --logotype: #909090;
     --logotype-shadow: #4080f0;
     --primary-background: linear-gradient(hsl(90, 33%, 20%), hsl(90, 100%, 7%));
-    --primary-background-active: linear-gradient(hsl(90, 33%, 20%), hsl(90, 52%, 27%) 30%);
+    --primary-background-active: linear-gradient(hsl(90, 100%, 7%), hsl(90, 33%, 20%));
     --primary-background-hover: linear-gradient(hsl(90, 52%, 27%), hsl(90, 100%, 13%) 70%);
     --new-border: hsl(120, 34%, 24%);
     --new-shadow: #101010;
