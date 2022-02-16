@@ -59,4 +59,5 @@ textarea:focus {
 
 .save {
   flex-grow: 1;
+  order: 1;
 }
