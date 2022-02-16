@@ -17,7 +17,8 @@
          web-server/web-server
          web-server/http
          web-server/servlet-env
-         web-server/templates)
+         web-server/templates
+         koyo/mime)
 
 (define schema-version 2)
 (define db-conn (make-parameter #f))
@@ -60,7 +61,7 @@
                                                            #:message #"Not Found")))])
     (define pth (apply build-path (map path/param-path (url-path (request-uri req)))))
     (define ip (open-input-file pth))
-    (set! res (mk-gud (curry copy-port ip) #:mime #"text/css")))
+    (set! res (mk-gud (curry copy-port ip) #:mime (path->mime-type pth))))
   res)
 
 (define (make-head res)
