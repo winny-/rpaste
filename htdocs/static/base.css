@@ -6,13 +6,14 @@
   --background-gradient: linear-gradient(#c0c0c0, #e0e0e0);
   --background-hover: rgba(0, 0, 0, 0.1);
   --border: #808080 1px solid;
+  --code-background: rgba(255, 255, 255, 0.5);
   --input: #f0f0f0;
   --logotype: #404040;
   --logotype-shadow: #989898;
-  --primary-background: linear-gradient(#eeffdd, #ccddbb);
-  --primary-background-active: linear-gradient(#bade97, #ccddbb 30%);
-  --primary-background-hover: linear-gradient(#dfffbf, #bade97 70%);
-  --new-border: #80c080;
+  --primary-background: linear-gradient(hsl(90, 100%, 93%), hsl(90, 33%, 80%));
+  --primary-background-active: linear-gradient(hsl(90, 52%, 73%), hsl(90, 33%, 80%) 30%);
+  --primary-background-hover: linear-gradient(hsl(90, 100%, 87%), hsl(90, 52%, 73%) 70%);
+  --new-border: hsl(120, 34%, 63%);
   --new-shadow: #f0f0f0;
   --scroll: #b0b0b0;
   --scroll-bg: #e0e0e0;
@@ -26,6 +27,30 @@
   --sans: Roboto, 'Helvetica Neue', 'Noto Sans', sans-serif;
   --serif: Cambria, 'Roboto Slab', 'Noto Serif', serif;
 }
+@media (prefers-color-scheme: dark) {
+  :root {
+    --a: #80c0f0;
+    --accent: #284020;
+    --background-active: rgba(0, 0, 0, 0.2);
+    --background-color: #101010;
+    --background-gradient: linear-gradient(#101010, #202020);
+    --background-hover: rgba(255, 255, 255, 0.1);
+    --border: #404040 1px solid;
+    --code-background: rgba(255, 255, 255, 0.1);
+    --input: #101010;
+    --logotype: #909090;
+    --logotype-shadow: #4080f0;
+    --primary-background: linear-gradient(hsl(90, 33%, 20%), hsl(90, 100%, 7%));
+    --primary-background-active: linear-gradient(hsl(90, 33%, 20%), hsl(90, 52%, 27%) 30%);
+    --primary-background-hover: linear-gradient(hsl(90, 52%, 27%), hsl(90, 100%, 13%) 70%);
+    --new-border: hsl(120, 34%, 24%);
+    --new-shadow: #101010;
+    --scroll: #303030;
+    --scroll-bg: #101010;
+    --text: #f0f0f0;
+    --text-alt: #f080c0;
+  }
+}  
 * {
   box-sizing: border-box;
   scrollbar-color: var(--scroll) var(--scroll-bg);
@@ -42,6 +67,7 @@
 }
 body {
   background: var(--background-gradient);
+  color: var(--text);
   font-family: var(--sans);
   font-size: var(--font-size);
   margin: 0;
@@ -125,7 +151,7 @@ h2 {
 }
 
 code {
-  background: rgba(255, 255, 255, 0.5);
+  background: var(--code-background);
   color: var(--text-alt);
   font-family: var(--monospace);
 }
