@@ -1,5 +1,4 @@
 #lang racket/base
-
 (require racket/bool
          racket/cmdline
          racket/date
@@ -12,6 +11,7 @@
          racket/format
          racket/path
          db
+         koyo/mime
          openssl/sha1
          net/url
          web-server/web-server
