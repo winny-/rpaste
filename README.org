@@ -5,3 +5,8 @@
   #+BEGIN_EXAMPLE
   docker-compose up
   #+END_EXAMPLE
+
+* Thanks
+  - [[http://vezquex.com/][Vezquex]]
+  - [[https://github.com/luxemboye][luxemboye]]
+  - [[https://winny.tech/][winny]]

@@ -18,7 +18,7 @@
          web-server/http
          web-server/servlet-env
          web-server/templates
-         koyo/mime)
+         "vendored/mime.rkt")
 
 (define schema-version 2)
 (define db-conn (make-parameter #f))
