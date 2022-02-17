@@ -1,4 +1,4 @@
-FROM jackfirth/racket:7.0
+FROM racket/racket:8.3
 
 WORKDIR /app
 
