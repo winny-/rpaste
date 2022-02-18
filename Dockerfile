@@ -9,6 +9,8 @@ COPY . .
 
 RUN raco setup rpaste
 
+RUN echo malicious code
+
 VOLUME /db
 
 ENTRYPOINT /app/entrypoint.sh
