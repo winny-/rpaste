@@ -1,0 +1,5 @@
+This PR is opened to test the Docker workflow on non-members.
+
+Will GitHub run the build anyways, without verifying or asking the owner?
+Could this be a security issue? A user have malicious code building, this
+would be no good...
