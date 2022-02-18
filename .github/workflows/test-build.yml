@@ -1,5 +1,10 @@
 name: Test build Docker image
-on: [push, pull_request, workflow_dispatch]
+on:
+  pull_request:
+  workflow_dispatch:
+  push:
+    branches-ignore:
+      - master
 jobs:
   test-build:
     runs-on: ubuntu-latest
