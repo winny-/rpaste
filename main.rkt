@@ -146,7 +146,7 @@ END
                     hash data)
         (if (and raw (bindings-assq #"redirect" raw))
             (redirect-to (format "/~a" hash))
-            (mk-gud (send-output (write-string (string-append hash "\n"))))))
+            (mk-gud (send-output (printf "~a~a\n" (site-baseurl req) hash)))))
       (response/output (send-output (write-string "Bad request. Need payload p=..."))
                        #:code 400
                        #:message #"Bad request")))
