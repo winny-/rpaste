@@ -165,6 +165,9 @@ END
     (connection-pool
      (thunk (postgresql-connect
              #:user (getenv "POSTGRES_USER")
+             #:port (match (getenv "POSTGRES_PORT")
+                      [#f 5432]
+                      [s (string->number s)])
              #:database (getenv "POSTGRES_DB")
              #:server (getenv "POSTGRES_HOST")
              #:password (getenv "POSTGRES_PASSWORD")
