@@ -12,6 +12,7 @@
          racket/format
          racket/path
          racket/string
+         racket/math
          db
          openssl/sha1
          net/url
@@ -19,6 +20,7 @@
          web-server/http
          web-server/servlet-env
          web-server/templates
+         web-server/safety-limits
          net/mime-type)
 
 (define schema-version 2)
@@ -194,6 +196,10 @@ INSERT INTO Metadata (key, value)
 END
               )
   (log-rpaste-info "Connected and schema created.  Visit http://~a:~a/" (or (listen-ip) "0.0.0.0") (listen-port))
+  (define max-waiting 511)
+  (define safety-limits
+    (make-safety-limits #:max-waiting max-waiting
+                        #:max-form-data-field-length (sqr 1024)))
   (serve/servlet start
                  #:stateless? #t
                  #:listen-ip (listen-ip)
@@ -201,7 +207,8 @@ END
                  #:servlet-path "/"
                  #:servlet-regexp #rx""
                  #:command-line? #t
-                 #:server-root-path "."))
+                 #:server-root-path "."
+                 #:safety-limits safety-limits))
 
 (module+ main
   (with-logging-to-port (current-error-port)
