@@ -167,7 +167,9 @@ END
              #:user (getenv "POSTGRES_USER")
              #:database (getenv "POSTGRES_DB")
              #:server (getenv "POSTGRES_HOST")
-             #:password (getenv "POSTGRES_PASSWORD"))))))
+             #:password (getenv "POSTGRES_PASSWORD")
+             #:ssl 'optional)))))
+  (log-rpaste-info "Creating schema...")
   (query-exec (db-conn) #<<END
 CREATE TABLE IF NOT EXISTS Pastes
   ("id" SERIAL,
