@@ -4,6 +4,7 @@
 (define deps
   '("base"
     "db-lib"
-    "web-server-lib"))
+    "web-server-lib"
+    "mime-type-lib"))
 (define racket-launcher-names '("rpaste"))
 (define racket-launcher-libraries '("main.rkt"))
