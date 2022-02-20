@@ -5,7 +5,19 @@ services:
     restart: always
     build:
       context: .
-    volumes:
-      - /tmp/db:/db
     ports:
       - 8080:8080
+    depends_on:
+      - db
+    environment:
+      POSTGRES_PASSWORD: example
+      POSTGRES_USER: rpaste
+      POSTGRES_HOST: db
+      POSTGRES_DB: rpaste
+  db:
+    image: postgres
+    restart: always
+    environment:
+      POSTGRES_PASSWORD: example
+      POSTGRES_USER: rpaste
+      POSTGRES_DB: rpaste

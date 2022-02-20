@@ -9,6 +9,4 @@ COPY . .
 
 RUN raco setup rpaste
 
-VOLUME /db
-
 ENTRYPOINT /app/entrypoint.sh

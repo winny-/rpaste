@@ -33,9 +33,8 @@ curl -F p=\&lt;- @address &lt; your-file.txt
               <ul class='pastes'>
                 @in[r rows]{
                 <li>
+                  <i>@(sql-timestamp->string (vector-ref r 1))</i>
                   <a href='@(vector-ref r 0)'>@(vector-ref r 0)</a>
-                  <br/>
-                  <i>@(epoch->rfc2822 (vector-ref r 1))</i>
                 </li>
               }
             </ul>})

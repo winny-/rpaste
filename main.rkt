@@ -79,6 +79,14 @@
 (define (mk-gud fn #:mime [mime #"text/plain; charset=utf-8"])
   (response/output fn #:mime-type mime))
 
+;; XXX is there a better way to do this?  This feels not very user friendly.
+(define (sql-timestamp->string sql-ts)
+  (match-define (struct sql-timestamp (year month day hour minute second nanosecond tz))
+    sql-ts)
+  (define (f v)
+    (~r v #:min-width 2 #:pad-string "0"))
+  (format "~a-~a-~a ~a:~a" (f year) month day (f hour) (f minute)))
+
 (define (epoch->rfc2822 epoch)
   (parameterize ([date-display-format 'rfc2822])
     (date->string (seconds->date epoch #f) #t)))
@@ -117,21 +125,25 @@
   (if (null? p)
       (mk-bad "Not found [no paste specified with /your_paste_here] :(")
       (let ([rows (query-rows (db-conn)
-                              "SELECT paste FROM Pastes WHERE key = ?"
+                              "SELECT paste FROM Pastes WHERE key = $1"
                               (car p))])
         (if (null? rows)
             (mk-bad (format "No paste with key [~a] :(" (car p)))
-            (mk-gud (send-output (write-bytes (vector-ref (car rows) 0))))))))
+            (mk-gud (send-output (write-string (vector-ref (car rows) 0))))))))
 
 (define (make-paste req)
   (define raw (request-bindings/raw req))
   (define pf (implies raw (bindings-assq #"p" raw)))
   (if (binding:form? pf)
-      (let* ([data (binding:form-value pf)]
-             [hash (sha1 (open-input-bytes data))])
+      (let* ([data (bytes->string/utf-8 (binding:form-value pf))]
+             [hash (sha1 (open-input-string data))])
         (query-exec (db-conn)
-                    "INSERT OR IGNORE INTO Pastes (key, paste, timestamp) VALUES (?, ?, ?)"
-                    hash data (current-seconds))
+                    #<<END
+INSERT INTO Pastes (key, paste)
+            VALUES ($1, $2)
+       ON CONFLICT DO NOTHING
+END
+                    hash data)
         (if (and raw (bindings-assq #"redirect" raw))
             (redirect-to (format "/~a" hash))
             (mk-gud (send-output (write-string (string-append hash "\n"))))))
@@ -142,35 +154,41 @@
 (define (fun)
   (define listen-port (make-parameter 8080))
   (define listen-ip (make-parameter #f))
-  (define (normalize-path-string s)
-    (path->string (simple-form-path (string->path s))))
-  (define database (make-parameter (normalize-path-string (format "./rpaste~a.sqlite3" schema-version))
-                                   normalize-path-string))
   (command-line
    #:once-each
    [("-p" "--port") port-string "Port to listen on"
                     (listen-port (string->number port-string))]
    [("--ip") ip-string "IP to listen on"
-             (listen-ip ip-string)]
-   [("-d" "--database") database-string "Database to use"
-                        (database database-string)])
-  (log-rpaste-debug "(listen-port) = ~a, (listen-ip) = ~a, (database) = ~a"
-                    (listen-port)
-                    (listen-ip)
-                    (database))
+             (listen-ip ip-string)])
   (db-conn
    (virtual-connection
     (connection-pool
-     (thunk (sqlite3-connect #:database (string->path (database))
-                             #:mode 'create)))))
+     (thunk (postgresql-connect
+             #:user (getenv "POSTGRES_USER")
+             #:database (getenv "POSTGRES_DB")
+             #:server (getenv "POSTGRES_HOST")
+             #:password (getenv "POSTGRES_PASSWORD"))))))
   (query-exec (db-conn) #<<END
 CREATE TABLE IF NOT EXISTS Pastes
-  ("id" INTEGER PRIMARY KEY  AUTOINCREMENT  NOT NULL,
+  ("id" SERIAL,
    "key" TEXT NOT NULL  UNIQUE,
-   "paste" BLOB NOT NULL,
-   "timestamp" INTEGER NOT NULL)
+   "paste" TEXT NOT NULL,
+   "timestamp" TIMESTAMPTZ NOT NULL DEFAULT now()::timestamp)
 END
               )
+  (query-exec (db-conn) #<<END
+CREATE TABLE IF NOT EXISTS Metadata
+  ("key" varchar (20) PRIMARY KEY,
+   "value" TEXT)
+END
+              )
+  (query-exec (db-conn) #<<END
+INSERT INTO Metadata (key, value)
+              VALUES ('version', '001')
+       ON CONFLICT DO NOTHING
+END
+              )
+  (log-rpaste-info "Connected and schema created.  Visit http://~a:~a/" (or (listen-ip) "0.0.0.0") (listen-port))
   (serve/servlet start
                  #:stateless? #t
                  #:listen-ip (listen-ip)
