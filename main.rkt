@@ -1,32 +1,27 @@
 #lang racket/base
 
-(require racket/bool
+(require db
+         net/mime-type
+         net/url
+         racket/bool
          racket/cmdline
          racket/date
          racket/exn
+         racket/format
          racket/function
          racket/list
-         racket/match
-         racket/port
          racket/logging
-         racket/format
-         racket/path
-         racket/string
+         racket/match
          racket/math
-         db
-         openssl/sha1
-         net/url
-         web-server/web-server
+         racket/port
+         racket/string
+         web-server/dispatch
          web-server/http
+         web-server/safety-limits
          web-server/servlet-env
          web-server/templates
-         web-server/safety-limits
-         net/mime-type)
-
-(define schema-version 2)
-(define db-conn (make-parameter #f))
-
-(define-logger rpaste)
+         "data.rkt"
+         "logger.rkt")
 
 (define-syntax-rule (send-output a ...)
   (λ (op)
@@ -36,25 +31,31 @@
 
 (define site-title "rpaste")
 
-(define (start req)
-  (log-rpaste-info "~a ~a" (request-method req) (request-uri req))
-  (match (request-method req)
-    [#"HEAD" (make-head (start (struct-copy request req [method #"GET"])))]
-    [#"GET" (route-get req)]
-    [#"POST" (make-paste req)]
-    [m (mk-bad (format "Method ~a not allowed." m)
-               #:code 405
-               #:message #"Method Not Allowed")]))
+(define-values (dispatch rev-url)
+  (dispatch-rules
+   [("") #:method "get" list-pastes]
+   [("") #:method "post" make-paste]
+   [("form") #:method "get" paste-form]
+   [((string-arg)) #:method "get" show-paste]
+   [("static") #:method "get" send-static]))
 
-(define (route-get req)
-  (match (map path/param-path (url-path (request-uri req)))
-    [(or (? null?)
-         (list "" ...)
-         (list "list"))
-     (list-pastes req)]
-    [(list "form") (paste-form req)]
-    [(list-rest "static" paths) (send-static req)]
-    [_ (show-paste req)]))
+(define ((headize start) req)
+  (match (request-method req)
+    [#"HEAD"
+     (define get-response
+       (start (struct-copy request req [method #"GET"])))
+     (struct-copy response get-response
+                  [output void])]
+    [_ (start req)]))
+
+(define ((log-request start) req)
+  (define res (start req))
+  res
+  (log-rpaste-info "~a ~a -> ~a"
+                   (request-method req)
+                   (url->string (request-uri req))
+                   (response-code res))
+  res)
 
 (define (send-static req)
   (define res #f)
@@ -66,9 +67,6 @@
     (define ip (open-input-file pth))
     (set! res (mk-gud (curry copy-port ip) #:mime (path-mime-type pth))))
   res)
-
-(define (make-head res)
-  (struct-copy response res [output void]))
 
 (define (mk-bad txt #:code [code 404] #:message [msg #"Not found"] #:mime [mime #"text/plain"])
   (response/output (λ (op)
@@ -107,7 +105,7 @@
     [no-scheme (string-append "http://" no-scheme)]))
 
 (define (list-pastes req)
-  (define rows (query-rows (db-conn) "SELECT key, timestamp FROM Pastes ORDER BY timestamp DESC"))
+  (define rows (db:recent-pastes))
   (define address (site-baseurl req))
   (response/full
    200 #"Okay"
@@ -122,30 +120,19 @@
    empty
    (list (string->bytes/utf-8 (include-template "templates/form.html")))))
 
-(define (show-paste req)
-  (define p (map path/param-path (url-path (request-uri req))))
-  (if (null? p)
-      (mk-bad "Not found [no paste specified with /your_paste_here] :(")
-      (let ([rows (query-rows (db-conn)
-                              "SELECT paste FROM Pastes WHERE key = $1"
-                              (car p))])
-        (if (null? rows)
-            (mk-bad (format "No paste with key [~a] :(" (car p)))
-            (mk-gud (send-output (write-string (vector-ref (car rows) 0))))))))
+(define (show-paste req id)
+      (match (db:get-paste id)
+        [#f
+         (mk-bad (format "No paste with key [~a] :(" id))]
+        [paste
+         (mk-gud (send-output (write-string paste)))]))
 
 (define (make-paste req)
   (define raw (request-bindings/raw req))
   (define pf (implies raw (bindings-assq #"p" raw)))
   (if (binding:form? pf)
       (let* ([data (bytes->string/utf-8 (binding:form-value pf))]
-             [hash (sha1 (open-input-string data))])
-        (query-exec (db-conn)
-                    #<<END
-INSERT INTO Pastes (key, paste)
-            VALUES ($1, $2)
-       ON CONFLICT DO NOTHING
-END
-                    hash data)
+             [hash (db:create-paste data)])
         (if (and raw (bindings-assq #"redirect" raw))
             (redirect-to (format "/~a" hash))
             (mk-gud (send-output (printf "~a~a\n" (site-baseurl req) hash)))))
@@ -162,45 +149,13 @@ END
                     (listen-port (string->number port-string))]
    [("--ip") ip-string "IP to listen on"
              (listen-ip ip-string)])
-  (db-conn
-   (virtual-connection
-    (connection-pool
-     (thunk (postgresql-connect
-             #:user (getenv "POSTGRES_USER")
-             #:port (match (getenv "POSTGRES_PORT")
-                      [#f 5432]
-                      [s (string->number s)])
-             #:database (getenv "POSTGRES_DB")
-             #:server (getenv "POSTGRES_HOST")
-             #:password (getenv "POSTGRES_PASSWORD")
-             #:ssl 'optional)))))
-  (log-rpaste-info "Creating schema...")
-  (query-exec (db-conn) #<<END
-CREATE TABLE IF NOT EXISTS Pastes
-  ("id" SERIAL,
-   "key" TEXT NOT NULL  UNIQUE,
-   "paste" TEXT NOT NULL,
-   "timestamp" TIMESTAMPTZ NOT NULL DEFAULT now()::timestamp)
-END
-              )
-  (query-exec (db-conn) #<<END
-CREATE TABLE IF NOT EXISTS Metadata
-  ("key" varchar (20) PRIMARY KEY,
-   "value" TEXT)
-END
-              )
-  (query-exec (db-conn) #<<END
-INSERT INTO Metadata (key, value)
-              VALUES ('version', '001')
-       ON CONFLICT DO NOTHING
-END
-              )
+  (db:setup-connection)
   (log-rpaste-info "Connected and schema created.  Visit http://~a:~a/" (or (listen-ip) "0.0.0.0") (listen-port))
   (define max-waiting 511)
   (define safety-limits
     (make-safety-limits #:max-waiting max-waiting
                         #:max-form-data-field-length (sqr 1024)))
-  (serve/servlet start
+  (serve/servlet (log-request (headize dispatch))
                  #:stateless? #t
                  #:listen-ip (listen-ip)
                  #:port (listen-port)

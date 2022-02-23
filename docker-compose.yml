@@ -21,3 +21,5 @@ services:
       POSTGRES_PASSWORD: example
       POSTGRES_USER: rpaste
       POSTGRES_DB: rpaste
+    ports:
+      - 5432:5432
