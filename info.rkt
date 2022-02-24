@@ -1,6 +1,6 @@
 #lang info
 (define collection "rpaste")
-(define version "0.1.1")
+(define version "0.1.2")
 (define deps
   '("base"
     "db-lib"

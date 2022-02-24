@@ -21,13 +21,8 @@
          web-server/servlet-env
          web-server/templates
          "data.rkt"
+         "helpers.rkt"
          "logger.rkt")
-
-(define-syntax-rule (send-output a ...)
-  (λ (op)
-    (parameterize ([current-output-port op])
-      a ...)
-    (void)))
 
 (define site-title "rpaste")
 
@@ -36,8 +31,7 @@
    [("") #:method "get" list-pastes]
    [("") #:method "post" make-paste]
    [("form") #:method "get" paste-form]
-   [((string-arg)) #:method "get" show-paste]
-   [("static") #:method "get" send-static]))
+   [((string-arg)) #:method "get" show-paste]))
 
 (define ((headize start) req)
   (match (request-method req)
@@ -50,34 +44,11 @@
 
 (define ((log-request start) req)
   (define res (start req))
-  res
   (log-rpaste-info "~a ~a -> ~a"
                    (request-method req)
                    (url->string (request-uri req))
                    (response-code res))
   res)
-
-(define (send-static req)
-  (define res #f)
-  (with-handlers ([exn:fail:filesystem? (λ (ex) (set! res (mk-bad
-                                                           (exn->string ex)
-                                                           #:code 404
-                                                           #:message #"Not Found")))])
-    (define pth (apply build-path (map path/param-path (url-path (request-uri req)))))
-    (define ip (open-input-file pth))
-    (set! res (mk-gud (curry copy-port ip) #:mime (path-mime-type pth))))
-  res)
-
-(define (mk-bad txt #:code [code 404] #:message [msg #"Not found"] #:mime [mime #"text/plain"])
-  (response/output (λ (op)
-                     (write-string txt op)
-                     (void))
-                   #:code code
-                   #:message msg
-                   #:mime-type mime))
-
-(define (mk-gud fn #:mime [mime #"text/plain; charset=utf-8"])
-  (response/output fn #:mime-type mime))
 
 ;; XXX is there a better way to do this?  This feels not very user friendly.
 (define (sql-timestamp->string sql-ts)
@@ -107,38 +78,40 @@
 (define (list-pastes req)
   (define rows (db:recent-pastes))
   (define address (site-baseurl req))
-  (response/full
-   200 #"Okay"
-   (current-seconds) TEXT/HTML-MIME-TYPE
-   empty
-   (list (string->bytes/utf-8 (include-template "templates/homepage.html")))))
+  (response/200
+   #:mime-type TEXT/HTML-MIME-TYPE
+   (include-template "templates/homepage.html")))
 
 (define (paste-form req)
-  (response/full
-   200 #"Okay"
-   (current-seconds) TEXT/HTML-MIME-TYPE
-   empty
-   (list (string->bytes/utf-8 (include-template "templates/form.html")))))
+  (response/200
+   #:mime-type TEXT/HTML-MIME-TYPE
+   (include-template "templates/form.html")))
 
 (define (show-paste req id)
-      (match (db:get-paste id)
-        [#f
-         (mk-bad (format "No paste with key [~a] :(" id))]
-        [paste
-         (mk-gud (send-output (write-string paste)))]))
+  (match (db:get-paste id)
+    [#f
+     (response/404 (format "No paste with key [~a] :(\n" id))]
+    [paste
+     (response/200 paste)]))
 
 (define (make-paste req)
-  (define raw (request-bindings/raw req))
-  (define pf (implies raw (bindings-assq #"p" raw)))
-  (if (binding:form? pf)
-      (let* ([data (bytes->string/utf-8 (binding:form-value pf))]
-             [hash (db:create-paste data)])
-        (if (and raw (bindings-assq #"redirect" raw))
-            (redirect-to (format "/~a" hash))
-            (mk-gud (send-output (printf "~a~a\n" (site-baseurl req) hash)))))
-      (response/output (send-output (write-string "Bad request. Need payload p=..."))
-                       #:code 400
-                       #:message #"Bad request")))
+  (let/ec escape
+    (define raw (request-bindings/raw req))
+    (define pf (implies raw (bindings-assq #"p" raw)))
+    (unless (binding:form? pf)
+      (escape
+       (response/400 "Need payload p=...\n")))
+    (define data (bytes->string/utf-8 (binding:form-value pf)))
+    (unless (non-empty-string? data)
+      (escape
+       (response/400 "Payload p=... must have a non-zero length.\n")))
+    (define hash (db:create-paste data))
+    (if (and raw (bindings-assq #"redirect" raw))
+        (redirect-to (format "/~a" hash))
+        (response/200 (format "~a~a\n" (site-baseurl req) hash)))))
+
+(define (not-found req)
+  (response/404 "Not found\n"))
 
 (define (fun)
   (define listen-port (make-parameter 8080))
@@ -163,7 +136,8 @@
                  #:servlet-regexp #rx""
                  #:command-line? #t
                  #:server-root-path "."
-                 #:safety-limits safety-limits))
+                 #:safety-limits safety-limits
+                 #:file-not-found-responder (log-request (headize not-found))))
 
 (module+ main
   (with-logging-to-port (current-error-port)
