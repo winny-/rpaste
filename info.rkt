@@ -5,6 +5,10 @@
   '("base"
     "db-lib"
     "web-server-lib"
-    "mime-type-lib"))
+    "mime-type-lib"
+    "rackunit-lib"
+    "rackunit-typed"
+    "typed-racket-lib"
+    "binaryio-lib"))
 (define racket-launcher-names '("rpaste"))
 (define racket-launcher-libraries '("main.rkt"))

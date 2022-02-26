@@ -183,6 +183,7 @@ code {
 .pastes a {
   display: inline-block;
   line-height: 2;
+  font-family: monospace;
 }
 
 .credits {

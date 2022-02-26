@@ -4,21 +4,41 @@
          openssl/sha1
          racket/function
          racket/match
-         "logger.rkt")
+         racket/contract
+         "logger.rkt"
+         "vendored/base58.rkt")
 
 (provide (prefix-out db: (all-defined-out)))
+
+(define/match (base58-conversion-exn? e)
+  [((struct* exn ([message "Invalid character in base58 string"])))
+   #t]
+  [(_) #f])
+
+(define (paste-id->sha1 id)
+  (if (= 40 (string-length id))         ; Sha1, leave it be
+      id
+      (with-handlers ([base58-conversion-exn? (const #f)])
+        (bytes->hex-string
+         (base58-decode id)))))
+
+(define (sha1->base58 id)
+  (base58-encode (hex-string->bytes id)))
 
 (define schema-version 2)
 (define db-conn (make-parameter #f))
 
-(define (get-paste id)
-  (query-maybe-value (db-conn)
-                   #<<END
+(define/contract (get-paste id)
+  (string? . -> . (or/c #f string?))
+  (define canonical-id (paste-id->sha1 id))
+  (and canonical-id
+       (query-maybe-value (db-conn)
+                          #<<END
 SELECT paste
 FROM Pastes
 WHERE key = $1
 END
-                   id))
+                          canonical-id)))
 
 (define (create-paste paste)
   (define id (sha1 (open-input-string paste)))
@@ -30,17 +50,21 @@ INSERT INTO Pastes (key, paste)
 END
                id paste
                )
-  id)
+  (sha1->base58 id))
 
 (define (recent-pastes)
-  (query-rows (db-conn)
-              #<<END
+  (define rows
+    (query-rows (db-conn)
+                          #<<END
 SELECT key, timestamp
 FROM Pastes
 ORDER BY timestamp DESC
 LIMIT 10
 END
-              ))
+                          ))
+  (for/list ([r rows])
+    (match-define (vector key timestamp) r)
+    (vector (sha1->base58 key) timestamp)))
 
 (define (setup-connection)
   (db-conn
