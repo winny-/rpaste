@@ -62,14 +62,27 @@
   (parameterize ([date-display-format 'rfc2822])
     (date->string (seconds->date epoch #f) #t)))
 
+;;; TODO clean this up.  Note to self, always use headers-assq*, it is the
+;;; case-insensitive version.  Header names are case insensitive.
 (define (site-baseurl req)
   (define h (request-headers/raw req))
   (define s
     (cond
-      [(headers-assq #"Forwarded" h) => (compose1 bytes->string/utf-8 header-value)]
-      [(headers-assq #"X-Forwarded-For" h) => (compose1 bytes->string/utf-8 header-value)]
+      [(headers-assq* #"Fly-Forwarded-Proto" h)
+       =>
+       (λ (p)
+         (define proto (header-value p))
+         (format "~a://~a~a/"
+                 (bytes->string/utf-8 proto)
+                 (bytes->string/utf-8 (header-value (headers-assq* #"Host" h)))
+                 (match* (proto (header-value (headers-assq* #"Fly-Forwarded-Port" h)))
+                   [(#"https" #"443") ""]
+                   [(#"http" #"80") ""]
+                   [(_ (app bytes->string/utf-8 port)) (string-append ":" port)])))]
+      [(headers-assq* #"Forwarded" h) => (compose1 bytes->string/utf-8 header-value)]
+      [(headers-assq* #"X-Forwarded-For" h) => (compose1 bytes->string/utf-8 header-value)]
       [(getenv "APP_URL") => identity]
-      [(headers-assq #"Host" h) => (compose1 bytes->string/utf-8 header-value)]
+      [(headers-assq* #"Host" h) => (compose1 bytes->string/utf-8 header-value)]
       [else (format "~a:~a" (request-host-ip req) (request-host-port req))]))
   (match (string-append (string-trim s "/" #:repeat? #t) "/") 
     [(regexp "https?://.*" (list m)) m]
